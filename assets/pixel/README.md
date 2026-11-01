@@ -1,0 +1,12 @@
+# Pixel Frontier raster art
+
+Original assets generated with the built-in ImageGen tool on 2026-11-01 for the user-selected Pixel Frontier direction. Source originals remain in the generator output directory; game-ready copies are committed here. No API/CLI fallback was used. Runtime uses nearest-neighbor rendering and regular atlas crops, without modifying source pixels.
+
+## Prompt set / asset specifications
+
+- **frontier.png:** 16-bit pixel-art desert frontier background, extremely wide 3:1 landscape, muted olive sky and pale sun, ruined stone viaducts/mesas, ochre/brass/rust/ink-purple palette. Flat railroad/stone bridge across the foreground at 78% image height, dark foundations and dangling chains below. No characters, foreground bases, UI, typography or logos.
+- **soldiers.png:** transparent 4-column × 8-row equal-cell sprite atlas, same character per row, facing right and consistently grounded. Columns: walk contact, opposite-leg walk, attack windup, attack impact. Rows: brass-helmet rifle infantry; iron shield guard; goggled long-rifle marksman; blue-scarf frost engineer; rust-scarf saber scout; olive mortar crew; red-bandanna raider; spiked-armored machinegun boss. Crisp hard pixel clusters, human miniature proportions, no labels/grid/scenery.
+- **forts.png:** transparent 2-column equal-cell atlas. Left: scaffold/wood/metal frontier outpost with ochre gear banner, lanterns, sandbags and cannon aimed right. Right: rust-red armored crawler fort, tank treads, pipes, sandbags and cannon aimed left. Both grounded side view, identical cell footprints, no UI/text/connecting scenery.
+- **gears.png:** transparent 2×2 equal-cell atlas. Same 12-tooth front-facing silhouette and outer diameter in every cell. Materials in row order: brass/gold, silver/steel, aged copper, graphite. Beveled rings, rivets, pixel specular highlights and scratches; empty dark hubs for runtime icons. No perspective tilt, labels, symbols or extra objects.
+
+The generated sprite art is used as actual layered game assets, not a baked screenshot. Gear size, shafts, highlights, hit regions, levels, animation timing and connection logic are controlled by game code. Infantry row heights vary slightly in the generated output; `PIXEL_ROW_BOXES` in art.js calibrates each character's crop to prevent neighboring rows from leaking into portraits. Gear cells remain equal 2×2 crops. No source image pixels are altered.

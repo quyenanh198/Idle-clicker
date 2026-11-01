@@ -1,0 +1,30 @@
+{
+  "name": "idle-clicker",
+  "version": "1.0.0",
+  "description": "A desert gear-building idle battler with original vector art",
+  "main": "game.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "start": "node scripts/serve.cjs",
+    "test": "node --test tests/game.test.cjs",
+    "test:browser": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quyenanh198/Idle-clicker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/quyenanh198/Idle-clicker/issues"
+  },
+  "homepage": "https://github.com/quyenanh198/Idle-clicker#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  }
+}

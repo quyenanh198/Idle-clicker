@@ -1,58 +1,52 @@
-# Tidegear — design doc (v0.2)
+# Dunegear — game design
 
-Original gear-chain idle battler. Genre, loop and screen layout follow Ken's reference video (gear board + lane battle + deck, skills, summon). Name, theme, units, art and numbers are our own; placeholder emoji art is drawn through one `drawSprite()` function so real sprites can be swapped in.
+## Reference and presentation
 
-## Theme
-A clockwork lighthouse on a stormy beach. Gear-bots and sea critters defend it from sea monsters marching out of an enemy fort.
+Mechanics originated from the user-supplied gameplay recording. The current visual direction is the user-approved **Pixel Frontier** concept: crisp pixel art, an olive/ochre ruined railway battlefield, charcoal and bronze workshop panels, rust-red navigation and cream Fight controls. All raster art is generated specifically for this project and bundled in assets/pixel; see its README for source specifications.
 
-## Core loop
-1. **Build (between waves):** the board is a 6×4 grid of gear slots with two fixed **drive gears**. Buy a gear from the shop (3 offers + reroll), then tap a slot next to the powered chain to place it.
-2. **Power chain:** a gear works only while it touches the chain that starts at a drive gear (glows green and spins). Breaking the chain switches gears off.
-3. **Merge:** tap a gear, then a matching gear (same type, same level) to merge into level +1 (max 6). Tap an empty slot to move a gear.
-4. **Fight:** each powered crew gear spawns soldiers at its rate (e.g. 0.50/s). Soldiers march right from the lighthouse, monsters march left from the fort, they fight in the middle. Player taps monsters (or the fort) for bonus damage.
-5. **Gold:** every monster defeated drops Gold. **Lucky Cog** gears (the "+1" gear) add +level Gold per monster while powered.
-6. **Wave end:** fort destroyed = win (+ wave bonus). Lighthouse destroyed = lose, keep the kill Gold, retry the same wave.
-7. **Stage:** 10 waves, waves 5 and 10 are hard, wave 10 is a boss. Clearing a stage gives Bolts + Pearls, then the board and Gold reset.
-8. **Meta:** Bolts buy permanent Upgrades, Pearls buy Summons (unlock and level crew cards). Idle: Bolts accrue while away.
+## Loop and engine presentation
 
-## Screens (bottom nav on mobile, left rail on desktop)
-| Tab | Purpose |
-|---|---|
-| Upgrades | Permanent skills bought with Bolts |
-| Play | Wave bar, battle lane, gear board, shop, Reroll + Fight |
-| Crew | Unit cards, level up with copies |
-| Summon | Spend Pearls for random cards |
+Desktop places a full-width battlefield above the workshop, with a 6×4 engine grid on the left and recruitment controls on the right. Mobile stacks these sections. Every rotor has the same diameter, including drive, fighter and income gears at every level. Slots can be rectangular on wide screens; shafts span the actual distance between their centers. One shaft connects each adjacent occupied pair; no diagonals and no duplicate edges. Powered shafts show amber flow. Checkerboard parity gives neighboring rotors equal-speed opposite rotation, while icons and labels stay upright. Disconnected components stop. Short windows scroll content inside the frame.
 
-Mobile: lane above board, everything in one column. Desktop (≥ 900px): lane left, board + shop right.
+Build on a 6×4 grid with fixed drives at cells 7 and 9 (zero-based). Gears connect through four orthogonal neighbors. A component must touch a drive to work. Tap or drag offers onto powered adjacent slots. Move gears anywhere; disconnected fighter gears stop spawning. Matching type and level merges, maximum level 6.
 
-## Gears
-| Gear | Role | HP | DMG | Attack every | Range | Spawn/s |
-|---|---|---|---|---|---|---|
-| Rivet Bot 🤖 | Melee, starter | 30 | 6 | 1.0 s | short | 0.50 |
-| Clamp Crab 🦀 | Tank, starter | 80 | 4 | 1.2 s | short | 0.35 |
-| Lamp Owl 🦉 | Ranged, summon | 18 | 7 | 1.2 s | 170 | 0.40 |
-| Chill Jelly 🪼 | Ranged, slows 50% for 1.5 s | 22 | 3 | 1.0 s | 140 | 0.40 |
-| Flare Fox 🦊 | Melee, fast | 34 | 11 | 0.7 s | short | 0.40 |
-| Storm Drake 🐉 | Ranged | 55 | 16 | 1.5 s | 200 | 0.25 |
-| Lucky Cog ⚙️ | Connector, +level Gold per kill | – | – | – | – | – |
+Three offers; reroll costs 5 gold. Starting offers guarantee both starter fighters and a cog. When all offers sell, roll another three. Summoned fighters join the shop pool. Launch battle with at least one powered fighter. Construction locks during combat. Units march toward and attack enemies in range, then the tower. Tap enemies or the enemy tower for bonus damage. A win advances a wave; a loss keeps kill gold and retries the same wave. Wave 5 is hard; wave 10 is a boss. Clearing wave 10 grants rewards and resets board and gold for the next stage.
 
-- Unit HP and DMG × 1.8^(level−1) × card bonus (+15% per card level above 1) × skill bonuses. Spawn rate +5% per gear level.
+## Fighters
 
-## Economy (first pass, tune later)
-- g = 2×(stage−1) + wave.
-- Start each stage with 40 Gold (+ Start Gold skill). Gear price = 10 + gears bought this stage. Reroll = 5.
-- Monsters per wave = 4 + wave (boss wave: 1 boss with ×6 HP, ×2 damage). Monster HP = 24 × 1.3^g, damage = 4 × 1.28^g. Hard waves ×1.5.
-- Fort HP = 150 × 1.3^g. Lighthouse HP = 200 × 1.22^g × Lighthouse skill.
-- Gold per kill = 1 + floor(g/4) + powered Lucky Cog levels. Wave bonus = 10 + 2 × wave + Income skill.
-- Tap damage = 5 × 1.28^g × Tap skill.
-- Stage clear: Bolts = 5 × stage, Pearls = 10.
-- Skills cost 5 × (level+1) Bolts: Damage +10%, Crew HP +10%, Lighthouse +20%, Income +1, Tap +100%, Start Gold +10.
-- Summon: 30 Pearls → random card; level up needs level × 2 copies. Start with 60 Pearls.
-- Idle: 1 Bolt per 10 minutes away × stage (cap 8 h).
-- Sim check (greedy bot, no taps, no upgrades): clears stages 1–2 without losses; stage 3 starts needing retries.
+| Fighter | Role | HP | Damage | Attack cooldown | Range | Speed | Spawn/sec |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Frontier Infantry | Starter melee | 30 | 6 | 1.0 | 30 | 70 | .50 |
+| Iron Guard | Starter tank | 80 | 4 | 1.2 | 30 | 55 | .35 |
+| Longshot | Ranged | 18 | 7 | 1.2 | 170 | 60 | .40 |
+| Frost Engineer | Ranged, slows | 22 | 3 | 1.0 | 140 | 55 | .40 |
+| Saber Scout | Fast melee | 34 | 11 | .7 | 30 | 100 | .40 |
+| Mortar Crew | Ranged | 55 | 16 | 1.5 | 200 | 50 | .25 |
 
-## Save format
-localStorage key `tidegear-save-v2`: `{gold, bolts, pearls, stage, wave, bought, board[24], offers[3], cards{type:{lvl,copies}}, skills{dmg,hp,base,inc,tap,start}, lastSeen}`.
+Frost Engineer slows movement and attack by 50% for 1.5 seconds. Gear HP/damage multiply by `1.8^(level−1)`, card bonus `1 + .15 × (cardLevel−1)` and skill bonuses. Spawn rate increases 5% per gear level above 1. Powered Lucky Cogs add combined levels to gold per kill.
 
-## Next
-Swap in Ken's sprites, battle animations, sound, balance pass after playtesting.
+## Economy
+
+- `g = 2 × (stage−1) + wave`. Start with 40 gold plus Start Gold skill. Gear price `10 + gearsBoughtThisStage`.
+- Enemies `4 + wave`; boss wave has one with 6× HP and 2× damage. HP `24 × 1.3^g`, damage `4 × 1.28^g`; hard waves multiply both by 1.5. Spawn interval `max(.8, 2.2 − .1 × wave)`.
+- Enemy tower HP `150 × 1.3^g` (hard waves ×1.5). Player tower HP `200 × 1.22^g` plus Tower HP skill.
+- Kill gold `1 + floor(g/4) + poweredCogLevels`. Wave bonus `10 + 2 × wave + IncomeSkill`.
+- Tap damage `5 × 1.28^g × (1 + TapPowerLevel)`.
+- Stage clear grants `5 × stage` bolts and 10 gems. Start with 60 gems.
+- Summon costs 30 gems, uniformly among six fighters. Duplicate gives one copy. Level up costs `2 × currentCardLevel` copies.
+- Skills cost `5 × (level+1)` bolts. Per level: damage +10%, fighter HP +10%, tower HP +20%, wave income +1, tap damage +100%, starting gold +10.
+- Offline: one bolt per ten minutes multiplied by stage, capped at eight hours. Reload awards once.
+
+## Persistence
+
+Key `tidegear-save-v2` keeps prototype compatibility. Save after economy actions, every 15 seconds and on page exit. Validate grid, fixed drives, types, levels, currencies, skills and stage/wave ranges; invalid saves start fresh. Local simulation without accounts, server, purchases or analytics. Reloaded fights restart their wave.
+
+## Validation
+
+Node tests cover connectivity, purchases, merges, drag actions, first-wave balance, loss retry, boss rewards, save round trips and malformed saves. Playwright covers screens, mouse/touch drags, multiple pointers, keyboard placement, combat, summons, persistence and responsive overflow. Tests advance the real simulation instead of waiting for real-time battles.
+
+## Animation and sprites
+
+The infantry atlas contains eight character rows and four poses per character. Columns select walk A/B and attack windup/impact. Per-row crop metadata accounts for the generated atlas's varied row heights. Opposing units mirror the right-facing artwork; boss artwork scales up. Source images remain unchanged. Pixel crops use nearest-neighbor sampling and unique SVG clip IDs prevent cross-instance clipping during rotation.
+
+Attack pose lasts .30 seconds; hit feedback .16 seconds. Projectiles last .18 seconds, impact particles .30 seconds, death debris .60 seconds. These visual effects do not delay the existing damage calculation. They expire in simulation ticks. Lanterns/smoke/dust use low-frequency ambient animation. Reduced motion freezes decorative loops and walking frame changes. Rendering is separate from state persistence.

@@ -1,0 +1,62 @@
+name: Build and Test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build-and-test:
+    name: Build, unit tests and Chromium
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build static game
+        run: npm run build
+      - name: Run unit and build tests
+        run: npm test
+      - name: Install Chromium and system dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Test the built game in Chromium
+        run: npm run test:browser
+        env:
+          PLAYWRIGHT_TEST_BUILD: "1"
+      - name: Upload tested game build
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: dunegear-dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload browser report and failure traces
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload game preview screenshots
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: game-screenshots
+          path: .screenshots/*.png
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,7 +1,9 @@
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
-const root = path.resolve(__dirname, "..");
+const built = process.argv.includes("--dist");
+const root = path.resolve(__dirname, "..", built ? "dist" : ".");
+const port = built ? 4174 : 4173;
 const types = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -39,6 +41,6 @@ http
       res.end(data);
     });
   })
-  .listen(4173, "127.0.0.1", () =>
-    console.log("Dunegear: http://127.0.0.1:4173"),
+  .listen(port, "127.0.0.1", () =>
+    console.log(`Dunegear: http://127.0.0.1:${port}`),
   );

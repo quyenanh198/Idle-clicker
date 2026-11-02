@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [release.json]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Verify release build
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish versioned game
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - uses: actions/download-artifact@v8
+        with:
+          name: dunegear-dist
+          path: dist
+      - name: Validate version and release notes
+        id: version
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const version = require('./release.json').version;
+          if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Expected stable semver in release.json');
+          if (require('./package.json').version !== version) throw new Error('package.json and release.json versions must match');
+          const tag = `v${version}`;
+          const notes = `releases/${tag}.md`;
+          if (!fs.existsSync(notes)) throw new Error(`Missing ${notes}`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `tag=${tag}\nnotes=${notes}\narchive=dunegear-${tag}.zip\n`);
+          NODE
+      - name: Package the tested artifact
+        shell: bash
+        env:
+          ARCHIVE: ${{ steps.version.outputs.archive }}
+        run: |
+          test -f dist/index.html
+          test -f dist/assets/pixel/soldiers.png
+          mkdir release-assets
+          (cd dist && zip -r "../release-assets/$ARCHIVE" .)
+          (cd release-assets && sha256sum "$ARCHIVE" > "$ARCHIVE.sha256")
+      - name: Publish GitHub Release and tag
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ steps.version.outputs.tag }}
+          NOTES: ${{ steps.version.outputs.notes }}
+          ARCHIVE: ${{ steps.version.outputs.archive }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG already exists; refusing to overwrite published assets."
+            exit 1
+          fi
+          tag_refs="$(gh api "repos/$GH_REPO/git/matching-refs/tags/$TAG" --jq '.[].ref')"
+          if grep -Fxq "refs/tags/$TAG" <<< "$tag_refs"; then
+            tag_sha="$(gh api "repos/$GH_REPO/git/ref/tags/$TAG" --jq '.object.sha')"
+            if [[ "$tag_sha" != "$GITHUB_SHA" ]]; then
+              echo "Existing tag $TAG does not point at the tested commit."
+              exit 1
+            fi
+          else
+            gh api --method POST "repos/$GH_REPO/git/refs" \
+              -f "ref=refs/tags/$TAG" -f "sha=$GITHUB_SHA" > /dev/null
+          fi
+          gh release create "$TAG" \
+            "release-assets/$ARCHIVE" \
+            "release-assets/$ARCHIVE.sha256" \
+            --target "$GITHUB_SHA" \
+            --verify-tag \
+            --title "Dunegear $TAG — Pixel Frontier" \
+            --notes-file "$NOTES" \
+            --latest

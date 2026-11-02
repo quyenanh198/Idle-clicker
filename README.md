@@ -45,6 +45,12 @@ Successful runs upload `dunegear-dist`; browser reports, failure traces and game
 
 To reproduce the built-app browser checks locally, run `npm run build`, then set `PLAYWRIGHT_TEST_BUILD=1` when running `npm run test:browser`. Development browser tests continue to use port 4173. In CI, existing servers are never reused and the HTML reporter/failure traces are enabled.
 
+## Releases
+
+[Download v1.0.0](https://github.com/quyenanh198/Idle-clicker/releases/tag/v1.0.0). The game ZIP contains the tested static build; extract it and open `index.html`. Each release also provides a SHA-256 checksum.
+
+The Release workflow reuses Build and Test, then packages the verified artifact and publishes only from `main`. To prepare a future stable release, update `package.json`/lockfile and `release.json` to the same version, add `releases/vX.Y.Z.md`, and merge the manifest change. Published releases are never overwritten. Manual runs use the version in `release.json`.
+
 ## Art and animation
 
 Game assets and the ImageGen prompt specifications are in [assets/pixel](assets/pixel/README.md). Raster art is cropped at runtime with nearest-neighbor rendering. Infantry has walk and attack poses; hits, projectiles, sparks, debris, smoke and furnace light respond to gameplay. The reduced-motion preference disables rotation, power-flow and ambient loops.

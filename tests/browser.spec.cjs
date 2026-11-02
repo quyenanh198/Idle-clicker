@@ -161,14 +161,17 @@ test("phone: purchase, move, merge, fight and reload", async ({ page }) => {
   ).toBe(true);
   expect(errors).toEqual([]);
 });
-test("touch screen drag recruits a powered fighter", async ({ browser }) => {
+test("touch screen drag recruits a powered fighter", async ({
+  browser,
+  baseURL,
+}) => {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
     hasTouch: true,
     isMobile: true,
   });
   const page = await context.newPage();
-  await page.goto("http://127.0.0.1:4173");
+  await page.goto(baseURL);
   const from = await page.locator('[data-offer="0"]').boundingBox(),
     to = await page.locator('[data-slot="1"]').boundingBox();
   const cdp = await context.newCDPSession(page);

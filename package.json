@@ -1,7 +1,7 @@
 {
   "name": "idle-clicker",
   "version": "1.0.0",
-  "description": "A desert gear-building idle battler with original vector art",
+  "description": "Pixel Frontier gear battler with animated pixel sprites",
   "main": "game.js",
   "directories": {
     "doc": "docs",
@@ -9,7 +9,9 @@
   },
   "scripts": {
     "start": "node scripts/serve.cjs",
-    "test": "node --test tests/game.test.cjs",
+    "build": "node scripts/build.cjs",
+    "preview": "node scripts/serve.cjs --dist",
+    "test": "node --test tests/*.test.cjs",
     "test:browser": "playwright test"
   },
   "repository": {

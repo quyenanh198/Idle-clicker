@@ -1,15 +1,22 @@
 const { defineConfig } = require("@playwright/test");
+const ci = !!process.env.CI;
+const built = !!process.env.PLAYWRIGHT_TEST_BUILD;
+const baseURL = `http://127.0.0.1:${built ? 4174 : 4173}`;
 module.exports = defineConfig({
   testDir: "tests",
   testMatch: "*.spec.cjs",
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL,
     viewport: { width: 390, height: 844 },
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
   },
   webServer: {
-    command: "node scripts/serve.cjs",
-    url: "http://127.0.0.1:4173",
-    reuseExistingServer: true,
+    command: built ? "npm run preview" : "npm start",
+    url: baseURL,
+    reuseExistingServer: !ci && !built,
   },
-  reporter: "list",
+  forbidOnly: ci,
+  workers: ci ? 1 : undefined,
+  reporter: ci ? [["list"], ["html", { open: "never" }]] : "list",
 });

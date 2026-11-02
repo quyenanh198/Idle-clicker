@@ -1,5 +1,7 @@
 # Dunegear
 
+[![Build and Test](https://github.com/quyenanh198/Idle-clicker/actions/workflows/ci.yml/badge.svg)](https://github.com/quyenanh198/Idle-clicker/actions/workflows/ci.yml)
+
 A pixel-art gear-building idle battler. Build a mechanical crew engine in an underground workshop and defend a frontier outpost on a ruined desert railway. Works on phones and desktops.
 
 The selected **Pixel Frontier** theme uses locally bundled raster scenery, eight animated troop types, two forts and four equal-sized metal gear materials. Desktop places the battle above the gear workshop and item shop. Mobile stacks battle, engine and recruitment; short windows scroll within the game frame while navigation remains visible.
@@ -24,12 +26,24 @@ npm install
 npx playwright install chromium
 npm test
 npm run test:browser
+npm run build
+npm run preview
 npm start
 ```
 
 `game.js` owns simulation, state, controls and screen rendering. `art.js` loads the raster atlases, calibrates sprite crops and draws pixel scenery/animations. `styles.css` owns responsive presentation. Browser tests save captures to `.screenshots/` (gitignored).
 
 See [DESIGN.md](DESIGN.md) for rules and scope. No purchased assets, reference video frames, or original game's art are distributed here.
+
+## Build and CI
+
+`npm run build` checks runtime JavaScript syntax and creates a clean `dist/` containing only the HTML, CSS, JavaScript and four sprite/background PNGs. Missing runtime files fail the build before the previous output is replaced. `npm run preview` serves that artifact at **http://127.0.0.1:4174**.
+
+GitHub Actions runs **Build and Test** on pushes, pull requests and manual dispatch, using Ubuntu and Node 24. It installs locked dependencies, builds, runs unit/build tests, installs Chromium and tests the built artifact with Playwright. The workflow has read-only repository permissions.
+
+Successful runs upload `dunegear-dist`; browser reports, failure traces and game screenshots are retained as separate artifacts for 14 days. Open the [Actions page](https://github.com/quyenanh198/Idle-clicker/actions/workflows/ci.yml) to see results and download artifacts.
+
+To reproduce the built-app browser checks locally, run `npm run build`, then set `PLAYWRIGHT_TEST_BUILD=1` when running `npm run test:browser`. Development browser tests continue to use port 4173. In CI, existing servers are never reused and the HTML reporter/failure traces are enabled.
 
 ## Art and animation
 
